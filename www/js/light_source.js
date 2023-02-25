@@ -924,6 +924,7 @@ $(document).ready(function()
 
 	var devNET = ['atmoorb', 'cololight', 'fadecandy', 'philipshue', 'nanoleaf', 'tinkerforge', 'tpm2net', 'udpe131', 'udpartnet', 'udph801', 'udpraw', 'wled', 'yeelight'];
 	var devUSB = ['adalight', 'dmx', 'atmo', 'lightpack', 'paintpack', 'rawhid', 'sedu', 'tpm2', 'karate'];
+	var defFtdi = ['apa102_ftdi', 'ws2812_ftdi'];
 
 	var optArr = [
 		[]
@@ -933,6 +934,7 @@ $(document).ready(function()
 	optArr[3] = [];
 	optArr[4] = [];
 	optArr[5] = [];
+	optArr[6] = [];
 
 	for (var idx = 0; idx < ledDevices.length; idx++)
 	{
@@ -946,8 +948,10 @@ $(document).ready(function()
 			optArr[3].push(ledDevices[idx]);
 		else if ($.inArray(ledDevices[idx], devUSB) != -1)
 			optArr[4].push(ledDevices[idx]);
-		else
+		else if ($.inArray(ledDevices[idx], defFtdi) != -1)
 			optArr[5].push(ledDevices[idx]);
+		else
+			optArr[6].push(ledDevices[idx]);
 	}
 
 	$("#leddevices").append(createSel(optArr[0], $.i18n('conf_leds_optgroup_RPiSPI')));
@@ -955,7 +959,8 @@ $(document).ready(function()
 	$("#leddevices").append(createSel(optArr[2], $.i18n('conf_leds_optgroup_RPiGPIO')));
 	$("#leddevices").append(createSel(optArr[3], $.i18n('conf_leds_optgroup_network')));
 	$("#leddevices").append(createSel(optArr[4], $.i18n('conf_leds_optgroup_usb')));
-	$("#leddevices").append(createSel(optArr[5], $.i18n('conf_leds_optgroup_debug')));
+	$("#leddevices").append(createSel(optArr[5], $.i18n('conf_leds_optgroup_ftdi')));
+	$("#leddevices").append(createSel(optArr[6], $.i18n('conf_leds_optgroup_debug')));
 	$("#leddevices").val(window.serverConfig.device.type);
 	
 

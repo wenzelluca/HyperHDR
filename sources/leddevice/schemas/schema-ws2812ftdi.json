@@ -1,0 +1,14 @@
+{
+	"type":"object",
+	"required":true,
+	"properties":{
+		"rate": {
+			"type": "integer",
+			"title":"edt_dev_spec_baudrate_title",
+			"default": 3075000,
+			"minimum" : 2106000,
+			"maximum" : 3075000
+		}	
+	},
+	"additionalProperties": true
+}

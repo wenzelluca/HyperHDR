@@ -1,0 +1,12 @@
+{
+	"type": "object",
+	"required": true,
+	"properties": {
+		"rate": {
+			"type": "integer",
+			"title": "edt_dev_spec_baudrate_title",
+			"default": 5000000
+		}
+	},
+	"additionalProperties": true
+}

@@ -120,6 +120,7 @@
   "conf_leds_optgroup_debug": "Debug",
   "conf_leds_optgroup_network": "Network",
   "conf_leds_optgroup_usb": "USB/Serial",
+  "conf_leds_optgroup_ftdi": "USB/Ftdi",
   "conf_logging_btn_autoscroll": "Auto scrolling",
   "conf_logging_btn_pbupload": "Upload a report for support requests",
   "conf_logging_contpolicy": "Report Privacy Policy",
