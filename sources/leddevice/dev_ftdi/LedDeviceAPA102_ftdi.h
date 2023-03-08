@@ -42,6 +42,9 @@ private:
 	///
 	int write(const std::vector<ColorRgb>& ledValues) override;
 
+	/// The brighness level. Possibile values 1 .. 31.
+	int _brightnessControlMaxLevel;
+
 };
 
 #endif // LEDEVICET_APA102_H
