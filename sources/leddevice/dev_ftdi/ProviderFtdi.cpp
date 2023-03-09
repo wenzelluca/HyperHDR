@@ -8,6 +8,21 @@
 #define ANY_FTDI_VENDOR 0x0
 #define ANY_FTDI_PRODUCT 0x0
 
+namespace Pin
+{
+	// enumerate the AD bus for conveniance.
+	enum bus_t
+	{
+		SK = 0x01, // ADBUS0, SPI data clock
+		DO = 0x02, // ADBUS1, SPI data out
+		CS = 0x08, // ADBUS3, SPI chip select, active low
+		L0 = 0x10, // ADBUS4, SPI chip select, active high
+	};
+}
+
+// Use these pins as outputs
+const unsigned char pinDirection = Pin::SK | Pin::DO | Pin::CS | Pin::L0;
+
 ProviderFtdi::ProviderFtdi(const QJsonObject &deviceConfig)
 	: LedDevice(deviceConfig),
 	  _ftdic(NULL),
@@ -107,19 +122,20 @@ int ProviderFtdi::open()
 	{
 		return rc;
 	}
-	if ((rc = writeByte(SET_BITS_LOW)) != 1)
+	if ((rc = writeByte(SET_BITS_LOW)) != 1) // opcode: set low bits (ADBUS[0-7])
 	{
 		return rc;
 	}
 
-	if ((rc = writeByte(0b00000000)) != 1)
+	if ((rc = writeByte(Pin::CS & ~Pin::L0)) != 1) // argument: inital pin states
 	{
 		return rc;
 	}
-	if ((rc = writeByte(0b00000011)) != 1)
+	if ((rc = writeByte(pinDirection)) != 1) // argument: pin direction
 	{
 		return rc;
 	}
+
 	_isDeviceReady = true;
 	return rc;
 }
@@ -162,6 +178,21 @@ int ProviderFtdi::writeBytes(const qint64 size, const uint8_t *data)
 
 	int count_arg = size - 1;
 
+	if ((rc = writeByte(SET_BITS_LOW)) != 1)
+	{
+		return rc;
+	}
+
+	if ((rc = writeByte(Pin::L0 & ~Pin::CS)) != 1)
+	{
+		return rc;
+	}
+
+	if ((rc = writeByte(pinDirection)) != 1)
+	{
+		return rc;
+	}
+
 	if ((rc = writeByte(MPSSE_DO_WRITE | MPSSE_WRITE_NEG)) != 1)
 	{
 		return rc;
@@ -171,15 +202,31 @@ int ProviderFtdi::writeBytes(const qint64 size, const uint8_t *data)
 	{
 		return rc;
 	}
+
 	if ((rc = writeByte(count_arg >> 8)) != 1)
 	{
 		return rc;
 	}
+
 	if ((rc = ftdi_write_data(_ftdic, data, size)) != size)
 	{
 		setInError(ftdi_get_error_string(_ftdic));
 		return rc;
 	}
 
+	if ((rc = writeByte(SET_BITS_LOW)) != 1)
+	{
+		return rc;
+	}
+
+	if ((rc = writeByte(Pin::CS & ~Pin::L0)) != 1)
+	{
+		return rc;
+	}
+
+	if ((rc = writeByte(pinDirection)) != 1)
+	{
+		return rc;
+	}
 	return rc;
 }
