@@ -28,7 +28,6 @@ ProviderFtdi::ProviderFtdi(const QJsonObject &deviceConfig)
 	  _ftdic(NULL),
 	  _baudRate_Hz(1000000)
 {
-	_baudRate_Hz = deviceConfig["rate"].toInt(_baudRate_Hz);
 }
 
 bool ProviderFtdi::init(const QJsonObject &deviceConfig)
