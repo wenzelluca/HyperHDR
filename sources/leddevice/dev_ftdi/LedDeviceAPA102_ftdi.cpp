@@ -55,7 +55,6 @@ int LedDeviceAPA102_ftdi::write(const std::vector<ColorRgb> &ledValues)
 		_ledBuffer[4 + iLed * 4 + 1] = rgb.red;
 		_ledBuffer[4 + iLed * 4 + 2] = rgb.green;
 		_ledBuffer[4 + iLed * 4 + 3] = rgb.blue;
-		Debug(_log, "LED %d: %d %d %d", iLed, rgb.red, rgb.green, rgb.blue);
 	}
 
 	return writeBytes(_ledBuffer.size(), _ledBuffer.data());
