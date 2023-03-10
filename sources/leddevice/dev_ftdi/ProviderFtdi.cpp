@@ -63,30 +63,45 @@ int ProviderFtdi::openDevice()
 	if (autoDiscovery)
 	{
 		struct ftdi_device_list *devlist;
-
-		if (ftdi_usb_find_all(_ftdic, &devlist, ANY_FTDI_VENDOR, ANY_FTDI_PRODUCT) > 0)
+		int devicesDetected = 0;
+		if ((devicesDetected = ftdi_usb_find_all(_ftdic, &devlist, ANY_FTDI_VENDOR, ANY_FTDI_PRODUCT)) < 0)
 		{
-			if (ftdi_usb_open_dev(_ftdic, devlist[0].dev) < 0)
-			{
-				ftdi_list_free(&devlist);
-				return -1;
-			}
+			setInError(ftdi_get_error_string(_ftdic));
+			return -1;
 		}
+		if (devicesDetected == 0)
+		{
+			setInError("No ftdi devices detected");
+			return 0;
+		}
+
+		if (ftdi_usb_open_dev(_ftdic, devlist[0].dev) < 0)
+		{
+			setInError(ftdi_get_error_string(_ftdic));
+			ftdi_list_free(&devlist);
+			return -1;
+		}
+
 		ftdi_list_free(&devlist);
-		return 0;
+		return 1;
 	}
 	else
 	{
-		return ftdi_usb_open_string(_ftdic, QSTRING_CSTR(_deviceName));
+		if (ftdi_usb_open_string(_ftdic, QSTRING_CSTR(_deviceName)) < 0)
+		{
+			setInError(ftdi_get_error_string(_ftdic));
+			return -1;
+		}
+		return 1;
 	}
 }
 int ProviderFtdi::open()
 {
 	int rc = 0;
 
-	if ((rc = openDevice()) < 0)
+	if ((rc = openDevice()) != 1)
 	{
-		setInError(ftdi_get_error_string(_ftdic));
+		return -1;
 	}
 
 	/* doing this disable resets things if they were in a bad state */
