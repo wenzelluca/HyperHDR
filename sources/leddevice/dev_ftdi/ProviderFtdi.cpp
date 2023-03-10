@@ -24,6 +24,8 @@ namespace Pin
 // Use these pins as outputs
 const unsigned char pinDirection = Pin::SK | Pin::DO | Pin::CS | Pin::L0;
 
+const QString ProviderFtdi::AUTO_SETTING = QString("auto");
+
 ProviderFtdi::ProviderFtdi(const QJsonObject &deviceConfig)
 	: LedDevice(deviceConfig),
 	  _ftdic(ftdi_new()),
@@ -43,7 +45,7 @@ bool ProviderFtdi::init(const QJsonObject &deviceConfig)
 	if (LedDevice::init(deviceConfig))
 	{
 		_baudRate_Hz = deviceConfig["rate"].toInt(_baudRate_Hz);
-		_deviceName = deviceConfig["output"].toString("auto");
+		_deviceName = deviceConfig["output"].toString(AUTO_SETTING);
 
 		Debug(_log, "_baudRate_Hz [%d]", _baudRate_Hz);
 		Debug(_log, "_deviceName [%s]", QSTRING_CSTR(_deviceName));
@@ -55,25 +57,20 @@ bool ProviderFtdi::init(const QJsonObject &deviceConfig)
 
 int ProviderFtdi::openDevice()
 {
-	Debug(_log, "Opening FTDI device");
 
-	if (_deviceName.toLower() == "auto")
+	bool autoDiscovery = (QString::compare(_deviceName, ProviderFtdi::AUTO_SETTING, Qt::CaseInsensitive) == 0);
+	Debug(_log, "Opening FTDI device=%s autoDiscovery=%s", QSTRING_CSTR(_deviceName), autoDiscovery ? "true" : "false");
+	if (autoDiscovery)
 	{
 		struct ftdi_device_list *devlist;
-		int devices_found = 0;
 
-		if ((devices_found = ftdi_usb_find_all(_ftdic, &devlist, ANY_FTDI_VENDOR, ANY_FTDI_PRODUCT)) < 0)
+		if (ftdi_usb_find_all(_ftdic, &devlist, ANY_FTDI_VENDOR, ANY_FTDI_PRODUCT) > 0)
 		{
-			return -1;
-		}
-		if (devices_found < 1)
-		{
-			return -1;
-		}
-		if ((ftdi_usb_open_dev(_ftdic, devlist[0].dev)) < 0)
-		{
-			ftdi_list_free(&devlist);
-			return -1;
+			if (ftdi_usb_open_dev(_ftdic, devlist[0].dev) < 0)
+			{
+				ftdi_list_free(&devlist);
+				return -1;
+			}
 		}
 		ftdi_list_free(&devlist);
 		return 0;
@@ -242,7 +239,7 @@ QJsonObject ProviderFtdi::discover(const QJsonObject & /*params*/)
 	QJsonObject devicesDiscovered;
 	QJsonArray deviceList;
 	struct ftdi_device_list *devlist;
-	QJsonObject autoDevice = QJsonObject{{"value", "auto"}, {"name", "Auto"}};
+	QJsonObject autoDevice = QJsonObject{{"value", AUTO_SETTING}, {"name", "Auto"}};
 	deviceList.push_back(autoDevice);
 
 	if (ftdi_usb_find_all(_ftdic, &devlist, ANY_FTDI_VENDOR, ANY_FTDI_PRODUCT) > 0)

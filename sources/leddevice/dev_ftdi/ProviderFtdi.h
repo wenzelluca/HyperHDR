@@ -21,6 +21,7 @@ public:
 	ProviderFtdi(const QJsonObject& deviceConfig);
 	~ProviderFtdi() override;
 
+	static const QString AUTO_SETTING;
 
 protected:
 	///
