@@ -76,6 +76,7 @@ int ProviderFtdi::openDevice()
 			return -1;
 		}
 		ftdi_list_free(&devlist);
+		return 0;
 	}
 	else
 	{
