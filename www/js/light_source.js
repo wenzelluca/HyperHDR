@@ -880,7 +880,9 @@ $(document).ready(function()
 			var yeelight_title = 'wiz_yeelight_title';
 			changeWizard(data, yeelight_title, startWizardYeelight);
 		}		
-		else if (["apa102", "apa104", "awa_spi", "lpd6803", "lpd8806", "p9813", "sk6812spi", "sk6822spi", "sk9822", "ws2801", "ws2812spi", "wled", "adalight", "atmo", "dmx", "karate", "sedu", "tpm2"].includes(ledType))
+		else if (["apa102", "apa104", "awa_spi", "lpd6803", "lpd8806", "p9813", "sk6812spi", 
+				"sk6822spi", "sk9822", "ws2801", "ws2812spi", "wled", "adalight", "atmo", "dmx", 
+				"karate", "sedu", "tpm2"].includes(ledType) || ledType.endsWith("_ftdi"))
 		{					
 			let selectorControl = $("<select id=\"deviceListInstances\" />");
 			let targetControl = 'output';
@@ -892,7 +894,7 @@ $(document).ready(function()
 				requestLedDeviceDiscovery(ledType).then( (result) => deviceListRefresh(ledType, result, 'root.specificOptions.host','select_wled_intro','select_wled_rescan'));
 				targetControl = 'host';
 			}
-			else if (["adalight", "atmo", "dmx", "karate", "sedu", "tpm2"].includes(ledType))
+			else if (["adalight", "atmo", "dmx", "karate", "sedu", "tpm2"].includes(ledType) || ledType.endsWith("_ftdi"))
 				requestLedDeviceDiscovery(ledType).then( (result) => deviceListRefresh(ledType, result, 'root.specificOptions.output','edt_dev_spec_outputPath_title'));
 			else
 				requestLedDeviceDiscovery(ledType).then( (result) => deviceListRefresh(ledType, result, 'root.specificOptions.output', 'edt_dev_spec_spipath_title'));

@@ -19,6 +19,8 @@ public:
 	/// @brief Constructs a Ftdi LED-device
 	///
 	ProviderFtdi(const QJsonObject& deviceConfig);
+	~ProviderFtdi() override;
+
 
 protected:
 	///
@@ -51,12 +53,15 @@ protected:
 	///
 	int writeBytes(const qint64 size, const uint8_t* data);
 
+	
+	QJsonObject discover(const QJsonObject& params) override;
 
 	/// The Ftdi serial-device
 	struct ftdi_context *_ftdic;
 
 	/// The used baud-rate of the output device
 	qint32 _baudRate_Hz;
+	QString _deviceName;
 
 protected slots:
 
@@ -69,6 +74,8 @@ protected slots:
 
 private:
 	int writeByte(uint8_t data);
+
+	int openDevice();
 };
 
 #endif // PROVIDERFtdi_H
