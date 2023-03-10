@@ -19,7 +19,6 @@ public:
 	/// @brief Constructs a Ftdi LED-device
 	///
 	ProviderFtdi(const QJsonObject& deviceConfig);
-	~ProviderFtdi() override;
 
 	static const QString AUTO_SETTING;
 

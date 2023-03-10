@@ -28,14 +28,9 @@ const QString ProviderFtdi::AUTO_SETTING = QString("auto");
 
 ProviderFtdi::ProviderFtdi(const QJsonObject &deviceConfig)
 	: LedDevice(deviceConfig),
-	  _ftdic(ftdi_new()),
+	  _ftdic(NULL),
 	  _baudRate_Hz(1000000)
 {
-}
-
-ProviderFtdi::~ProviderFtdi()
-{
-	ftdi_free(_ftdic);
 }
 
 bool ProviderFtdi::init(const QJsonObject &deviceConfig)
@@ -57,6 +52,7 @@ bool ProviderFtdi::init(const QJsonObject &deviceConfig)
 
 int ProviderFtdi::openDevice()
 {
+	_ftdic = ftdi_new();
 
 	bool autoDiscovery = (QString::compare(_deviceName, ProviderFtdi::AUTO_SETTING, Qt::CaseInsensitive) == 0);
 	Debug(_log, "Opening FTDI device=%s autoDiscovery=%s", QSTRING_CSTR(_deviceName), autoDiscovery ? "true" : "false");
@@ -167,10 +163,14 @@ int ProviderFtdi::open()
 int ProviderFtdi::close()
 {
 	// allow to clock out remaining data from powerOff()->writeBlack()
-	std::this_thread::sleep_for(std::chrono::milliseconds(15));
-	Debug(_log, "Closing FTDI device");
-	ftdi_set_bitmode(_ftdic, 0x00, BITMODE_RESET);
-	ftdi_usb_close(_ftdic);
+	if (_ftdic != NULL)
+	{
+		std::this_thread::sleep_for(std::chrono::milliseconds(15));
+		Debug(_log, "Closing FTDI device");
+		ftdi_set_bitmode(_ftdic, 0x00, BITMODE_RESET);
+		ftdi_usb_close(_ftdic);
+		_ftdic = NULL;
+	}
 	return LedDevice::close();
 }
 
@@ -254,16 +254,20 @@ QJsonObject ProviderFtdi::discover(const QJsonObject & /*params*/)
 	QJsonObject devicesDiscovered;
 	QJsonArray deviceList;
 	struct ftdi_device_list *devlist;
+	struct ftdi_context *ftdic;
+
 	QJsonObject autoDevice = QJsonObject{{"value", AUTO_SETTING}, {"name", "Auto"}};
 	deviceList.push_back(autoDevice);
 
-	if (ftdi_usb_find_all(_ftdic, &devlist, ANY_FTDI_VENDOR, ANY_FTDI_PRODUCT) > 0)
+	ftdic = ftdi_new();
+
+	if (ftdi_usb_find_all(ftdic, &devlist, ANY_FTDI_VENDOR, ANY_FTDI_PRODUCT) > 0)
 	{
 		struct ftdi_device_list *curdev = devlist;
 		while (curdev)
 		{
 			char manufacturer[128], description[128];
-			ftdi_usb_get_strings(_ftdic, curdev->dev, manufacturer, 128, description, 128, NULL, 0);
+			ftdi_usb_get_strings(ftdic, curdev->dev, manufacturer, 128, description, 128, NULL, 0);
 
 			libusb_device_descriptor desc;
 			libusb_get_device_descriptor(curdev->dev, &desc);
@@ -281,6 +285,7 @@ QJsonObject ProviderFtdi::discover(const QJsonObject & /*params*/)
 	}
 
 	ftdi_list_free(&devlist);
+	ftdi_free(ftdic);
 
 	devicesDiscovered.insert("ledDeviceType", _activeDeviceType);
 	devicesDiscovered.insert("devices", deviceList);
