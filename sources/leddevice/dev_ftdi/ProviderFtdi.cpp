@@ -15,14 +15,13 @@ namespace Pin
 	enum bus_t
 	{
 		SK = 0x01, // ADBUS0, SPI data clock
-		DO = 0x02, // ADBUS1, SPI data out
-		CS = 0x08, // ADBUS3, SPI chip select, active low
-		L0 = 0x10, // ADBUS4, SPI chip select, active high
+		DO = 0x02, // ADBUS1, SPI data out		
 	};
 }
 
 // Use these pins as outputs
-const unsigned char pinDirection = Pin::SK | Pin::DO | Pin::CS | Pin::L0;
+const unsigned char pinDirection = Pin::SK | Pin::DO;
+const unsigned char pinInitialState = 0b00000000;
 
 const QString ProviderFtdi::AUTO_SETTING = QString("auto");
 
@@ -147,7 +146,7 @@ int ProviderFtdi::open()
 		return rc;
 	}
 
-	if ((rc = writeByte(Pin::CS & ~Pin::L0)) != 1) // argument: inital pin states
+	if ((rc = writeByte(pinInitialState)) != 1) // argument: inital pin states
 	{
 		return rc;
 	}
@@ -196,20 +195,6 @@ int ProviderFtdi::writeBytes(const qint64 size, const uint8_t *data)
 
 	int count_arg = size - 1;
 
-	if ((rc = writeByte(SET_BITS_LOW)) != 1)
-	{
-		return rc;
-	}
-
-	if ((rc = writeByte(Pin::L0 & ~Pin::CS)) != 1)
-	{
-		return rc;
-	}
-
-	if ((rc = writeByte(pinDirection)) != 1)
-	{
-		return rc;
-	}
 
 	if ((rc = writeByte(MPSSE_DO_WRITE | MPSSE_WRITE_NEG)) != 1)
 	{
@@ -237,7 +222,7 @@ int ProviderFtdi::writeBytes(const qint64 size, const uint8_t *data)
 		return rc;
 	}
 
-	if ((rc = writeByte(Pin::CS & ~Pin::L0)) != 1)
+	if ((rc = writeByte(pinInitialState)) != 1)
 	{
 		return rc;
 	}
