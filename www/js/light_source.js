@@ -926,8 +926,6 @@ $(document).ready(function()
 
 	var devNET = ['atmoorb', 'cololight', 'fadecandy', 'philipshue', 'nanoleaf', 'tinkerforge', 'tpm2net', 'udpe131', 'udpartnet', 'udph801', 'udpraw', 'wled', 'yeelight'];
 	var devUSB = ['adalight', 'dmx', 'atmo', 'lightpack', 'paintpack', 'rawhid', 'sedu', 'tpm2', 'karate'];
-	var defFtdi = ['apa102_ftdi', 'ws2812_ftdi'];
-
 	var optArr = [
 		[]
 	];
@@ -940,6 +938,8 @@ $(document).ready(function()
 
 	for (var idx = 0; idx < ledDevices.length; idx++)
 	{
+		var isFtdi = ledDevices[idx].endsWith("_ftdi");
+
 		if ($.inArray(ledDevices[idx], devRPiSPI) != -1)
 			optArr[0].push(ledDevices[idx]);
 		else if ($.inArray(ledDevices[idx], devRPiPWM) != -1)
@@ -950,7 +950,7 @@ $(document).ready(function()
 			optArr[3].push(ledDevices[idx]);
 		else if ($.inArray(ledDevices[idx], devUSB) != -1)
 			optArr[4].push(ledDevices[idx]);
-		else if ($.inArray(ledDevices[idx], defFtdi) != -1)
+		else if (isFtdi)
 			optArr[5].push(ledDevices[idx]);
 		else
 			optArr[6].push(ledDevices[idx]);
