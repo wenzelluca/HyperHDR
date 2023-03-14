@@ -192,58 +192,35 @@ int ProviderFtdi::writeByte(uint8_t data)
 }
 int ProviderFtdi::writeBytes(const qint64 size, const uint8_t *data)
 {
+	uint8_t buf[100] = {0};
+	unsigned int icmd = 0;
 	int rc = 0;
 
 	int count_arg = size - 1;
+	buf[icmd++] = SET_BITS_LOW;
+	buf[icmd++] = Pin::L0 & ~Pin::CS;
+	buf[icmd++] = pinDirection;
+	buf[icmd++] = MPSSE_DO_WRITE | MPSSE_WRITE_NEG;
+	buf[icmd++] = count_arg;
+	buf[icmd++] = count_arg >> 8;
 
-	if ((rc = writeByte(SET_BITS_LOW)) != 1)
+	if ((rc = ftdi_write_data(_ftdic, buf, icmd)) != icmd)
 	{
+		setInError(ftdi_get_error_string(_ftdic));
 		return rc;
 	}
-
-	if ((rc = writeByte(Pin::L0 & ~Pin::CS)) != 1)
-	{
-		return rc;
-	}
-
-	if ((rc = writeByte(pinDirection)) != 1)
-	{
-		return rc;
-	}
-
-	if ((rc = writeByte(MPSSE_DO_WRITE | MPSSE_WRITE_NEG)) != 1)
-	{
-		return rc;
-	}
-
-	if ((rc = writeByte(count_arg)) != 1)
-	{
-		return rc;
-	}
-
-	if ((rc = writeByte(count_arg >> 8)) != 1)
-	{
-		return rc;
-	}
-
 	if ((rc = ftdi_write_data(_ftdic, data, size)) != size)
 	{
 		setInError(ftdi_get_error_string(_ftdic));
 		return rc;
 	}
-
-	if ((rc = writeByte(SET_BITS_LOW)) != 1)
+	icmd = 0;
+	buf[icmd++] = SET_BITS_LOW;
+	buf[icmd++] = Pin::CS & ~Pin::L0;
+	buf[icmd++] = pinDirection;
+	if ((rc = ftdi_write_data(_ftdic, buf, icmd)) != icmd)
 	{
-		return rc;
-	}
-
-	if ((rc = writeByte(Pin::CS & ~Pin::L0)) != 1)
-	{
-		return rc;
-	}
-
-	if ((rc = writeByte(pinDirection)) != 1)
-	{
+		setInError(ftdi_get_error_string(_ftdic));
 		return rc;
 	}
 	return rc;
