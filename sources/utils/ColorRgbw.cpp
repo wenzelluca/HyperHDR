@@ -24,11 +24,22 @@ namespace RGBW {
 		{
 			return WhiteAlgorithm::SUB_MIN_COOL_ADJUST;
 		}
+		if (str == "sub_min_custom_adjust")
+		{
+			return WhiteAlgorithm::SUB_MIN_CUSTOM_ADJUST;
+		}	
 		if (str.isEmpty() || str == "white_off")
 		{
 			return WhiteAlgorithm::WHITE_OFF;
 		}
 		return WhiteAlgorithm::INVALID;
+	}
+	void Rgb_to_RgbwAdjust(ColorRgb input, ColorRgbw* output, CalibrationConfig config)
+	{
+		output->white = static_cast<uint8_t>(qMin(input.red * config.F1, qMin(input.green * config.F2, input.blue * config.F3)));
+		output->red = input.red - static_cast<uint8_t>(output->white / config.F1);
+		output->green = input.green - static_cast<uint8_t>(output->white / config.F2);
+		output->blue = input.blue - static_cast<uint8_t>(output->white / config.F3);
 	}
 
 	void Rgb_to_Rgbw(ColorRgb input, ColorRgbw* output, WhiteAlgorithm algorithm)
@@ -46,31 +57,13 @@ namespace RGBW {
 
 		case WhiteAlgorithm::SUB_MIN_WARM_ADJUST:
 		{
-			// http://forum.garagecube.com/viewtopic.php?t=10178
-			// warm white
-			const double F1(0.274);
-			const double F2(0.454);
-			const double F3(2.333);
-
-			output->white = static_cast<uint8_t>(qMin(input.red * F1, qMin(input.green * F2, input.blue * F3)));
-			output->red = input.red - static_cast<uint8_t>(output->white / F1);
-			output->green = input.green - static_cast<uint8_t>(output->white / F2);
-			output->blue = input.blue - static_cast<uint8_t>(output->white / F3);
+			Rgb_to_RgbwAdjust(input, output, WARM_WHITE);
 			break;
 		}
 
 		case WhiteAlgorithm::SUB_MIN_COOL_ADJUST:
 		{
-			// http://forum.garagecube.com/viewtopic.php?t=10178
-			// cold white
-			const double F1(0.299);
-			const double F2(0.587);
-			const double F3(0.114);
-
-			output->white = static_cast<uint8_t>(qMin(input.red * F1, qMin(input.green * F2, input.blue * F3)));
-			output->red = input.red - static_cast<uint8_t>(output->white / F1);
-			output->green = input.green - static_cast<uint8_t>(output->white / F2);
-			output->blue = input.blue - static_cast<uint8_t>(output->white / F3);
+			Rgb_to_RgbwAdjust(input, output, COLD_WHITE);			
 			break;
 		}
 

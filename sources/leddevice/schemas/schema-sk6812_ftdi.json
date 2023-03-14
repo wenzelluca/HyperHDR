@@ -31,18 +31,68 @@
 				"subtract_minimum",
 				"sub_min_cool_adjust",
 				"sub_min_warm_adjust",
-				"white_off"
+				"sub_min_custom_adjust",
+				"white_off"				
 			],
-			"default": "subtract_minimum",
+			"default": "white_off",
 			"options": {
 				"enum_titles": [
 					"edt_dev_enum_subtract_minimum",
 					"edt_dev_enum_sub_min_cool_adjust",
 					"edt_dev_enum_sub_min_warm_adjust",
+					"edt_dev_enum_sub_min_custom_adjust",
 					"edt_dev_enum_white_off"
 				]
 			},
-			"propertyOrder": 4
+			"propertyOrder": 5
+		},
+		"white_channel_red": {
+			"type": "integer",
+			"title": "edt_rgbw_calibration_red",
+			"format": "stepper",
+			"required": true,
+			"default": 160,
+			"step": 1,
+			"minimum": 0,
+			"maximum": 255,
+			"options": {
+				"dependencies": {
+					"whiteAlgorithm": "sub_min_custom_adjust"
+				}
+			},
+			"propertyOrder": 7
+		},
+		"white_channel_green": {
+			"type": "integer",
+			"title": "edt_rgbw_calibration_green",
+			"format": "stepper",
+			"required": true,
+			"default": 160,
+			"step": 1,
+			"minimum": 0,
+			"maximum": 255,
+			"options": {
+				"dependencies": {
+					"whiteAlgorithm": "sub_min_custom_adjust"
+				}
+			},
+			"propertyOrder": 8
+		},
+		"white_channel_blue": {
+			"type": "integer",
+			"title": "edt_rgbw_calibration_blue",
+			"format": "stepper",
+			"required": true,
+			"default": 160,
+			"step": 1,
+			"minimum": 0,
+			"maximum": 255,
+			"options": {
+				"dependencies": {
+					"whiteAlgorithm": "sub_min_custom_adjust"
+				}
+			},
+			"propertyOrder": 9
 		}
 	},
 	"additionalProperties": true

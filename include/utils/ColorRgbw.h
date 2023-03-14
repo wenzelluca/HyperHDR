@@ -83,14 +83,27 @@ inline bool operator<=(const ColorRgbw& lhs, const ColorRgbw& rhs)
 
 namespace RGBW {
 
+	struct CalibrationConfig
+	{
+		double F1;
+		double F2;
+		double F3;		
+	};
+	
+	// http://forum.garagecube.com/viewtopic.php?t=10178			
+	const CalibrationConfig WARM_WHITE = {0.274, 0.454, 2.333};
+	const CalibrationConfig COLD_WHITE = {0.299, 0.587, 0.114};
+
 	enum class WhiteAlgorithm {
 		INVALID,
 		SUBTRACT_MINIMUM,
 		SUB_MIN_WARM_ADJUST,
 		SUB_MIN_COOL_ADJUST,
+		SUB_MIN_CUSTOM_ADJUST,
 		WHITE_OFF
 	};
 
 	WhiteAlgorithm stringToWhiteAlgorithm(const QString& str);
 	void Rgb_to_Rgbw(ColorRgb input, ColorRgbw* output, WhiteAlgorithm algorithm);
+	void Rgb_to_RgbwAdjust(ColorRgb input, ColorRgbw* output, CalibrationConfig config);
 }

@@ -44,11 +44,10 @@ private:
 	int write(const std::vector<ColorRgb>& ledValues) override;
 
 	RGBW::WhiteAlgorithm _whiteAlgorithm;
-
+	RGBW::CalibrationConfig _calibarion_config;
+				
 	const int SPI_BYTES_PER_COLOUR;
 	uint8_t bitpair_to_byte[4];
-
-	ColorRgbw _temp_rgbw;
 };
 
 #endif // LEDEVICESK6812ftdi_H

@@ -1,23 +1,22 @@
 #include "LedDeviceSk6812_ftdi.h"
 
-LedDeviceSk6812_ftdi::LedDeviceSk6812_ftdi(const QJsonObject& deviceConfig)
-	: ProviderFtdi(deviceConfig)
-	, _whiteAlgorithm(RGBW::WhiteAlgorithm::INVALID)
-	, SPI_BYTES_PER_COLOUR(4)
-	, bitpair_to_byte{
-		0b10001000,
-		0b10001100,
-		0b11001000,
-		0b11001100}
+LedDeviceSk6812_ftdi::LedDeviceSk6812_ftdi(const QJsonObject &deviceConfig)
+	: ProviderFtdi(deviceConfig),
+	  SPI_BYTES_PER_COLOUR(4),
+	  bitpair_to_byte{
+		  0b10001000,
+		  0b10001100,
+		  0b11001000,
+		  0b11001100}
 {
 }
 
-LedDevice* LedDeviceSk6812_ftdi::construct(const QJsonObject& deviceConfig)
+LedDevice *LedDeviceSk6812_ftdi::construct(const QJsonObject &deviceConfig)
 {
 	return new LedDeviceSk6812_ftdi(deviceConfig);
 }
 
-bool LedDeviceSk6812_ftdi::init(const QJsonObject& deviceConfig)
+bool LedDeviceSk6812_ftdi::init(const QJsonObject &deviceConfig)
 {
 
 	bool isInitOK = false;
@@ -28,28 +27,28 @@ bool LedDeviceSk6812_ftdi::init(const QJsonObject& deviceConfig)
 		QString whiteAlgorithm = deviceConfig["whiteAlgorithm"].toString("white_off");
 
 		_whiteAlgorithm = RGBW::stringToWhiteAlgorithm(whiteAlgorithm);
-		if (_whiteAlgorithm == RGBW::WhiteAlgorithm::INVALID)
-		{
-			QString errortext = QString("unknown whiteAlgorithm: %1").arg(whiteAlgorithm);
-			this->setInError(errortext);
-			isInitOK = false;
-		}
-		else
-		{
-			Debug(_log, "whiteAlgorithm : %s", QSTRING_CSTR(whiteAlgorithm));
+		uint8_t white_channel_red = qMin(deviceConfig["white_channel_red"].toInt(255), 255);
+		uint8_t white_channel_green = qMin(deviceConfig["white_channel_green"].toInt(255), 255);
+		uint8_t white_channel_blue = qMin(deviceConfig["white_channel_blue"].toInt(255), 255);
 
-			WarningIf((_baudRate_Hz < 2050000 || _baudRate_Hz > 4000000), _log, "SPI rate %d outside recommended range (2050000 -> 4000000)", _baudRate_Hz);
+		_calibarion_config = {
+			white_channel_red / 255.0,
+			white_channel_green / 255.0,
+			white_channel_blue / 255.0};
 
-			const int SPI_FRAME_END_LATCH_BYTES = 3;
-			_ledBuffer.resize(_ledRGBWCount * SPI_BYTES_PER_COLOUR + SPI_FRAME_END_LATCH_BYTES, 0x00);
+		Debug(_log, "whiteAlgorithm : %s", QSTRING_CSTR(whiteAlgorithm));
 
-			isInitOK = true;
-		}
+		WarningIf((_baudRate_Hz < 2050000 || _baudRate_Hz > 4000000), _log, "SPI rate %d outside recommended range (2050000 -> 4000000)", _baudRate_Hz);
+
+		const int SPI_FRAME_END_LATCH_BYTES = 3;
+		_ledBuffer.resize(_ledRGBWCount * SPI_BYTES_PER_COLOUR + SPI_FRAME_END_LATCH_BYTES, 0x00);
+
+		isInitOK = true;
 	}
 	return isInitOK;
 }
 
-int LedDeviceSk6812_ftdi::write(const std::vector<ColorRgb>& ledValues)
+int LedDeviceSk6812_ftdi::write(const std::vector<ColorRgb> &ledValues)
 {
 	unsigned spi_ptr = 0;
 	const int SPI_BYTES_PER_LED = sizeof(ColorRgbw) * SPI_BYTES_PER_COLOUR;
@@ -63,15 +62,24 @@ int LedDeviceSk6812_ftdi::write(const std::vector<ColorRgb>& ledValues)
 		_ledBuffer.resize(0, 0x00);
 		_ledBuffer.resize(_ledRGBWCount * SPI_BYTES_PER_COLOUR + SPI_FRAME_END_LATCH_BYTES, 0x00);
 	}
+	ColorRgbw temp_rgbw;
 
-	for (const ColorRgb& color : ledValues)
+	for (const ColorRgb &color : ledValues)
 	{
-		RGBW::Rgb_to_Rgbw(color, &_temp_rgbw, _whiteAlgorithm);
+		if (_whiteAlgorithm == RGBW::WhiteAlgorithm::SUB_MIN_CUSTOM_ADJUST)
+		{
+			RGBW::Rgb_to_RgbwAdjust(color, &temp_rgbw, _calibarion_config);
+		}
+		else
+		{
+			RGBW::Rgb_to_Rgbw(color, &temp_rgbw, _whiteAlgorithm);
+		}
+
 		uint32_t colorBits =
-			((uint32_t)_temp_rgbw.red << 24) +
-			((uint32_t)_temp_rgbw.green << 16) +
-			((uint32_t)_temp_rgbw.blue << 8) +
-			_temp_rgbw.white;
+			((uint32_t)temp_rgbw.red << 24) +
+			((uint32_t)temp_rgbw.green << 16) +
+			((uint32_t)temp_rgbw.blue << 8) +
+			temp_rgbw.white;
 
 		for (int j = SPI_BYTES_PER_LED - 1; j >= 0; j--)
 		{
