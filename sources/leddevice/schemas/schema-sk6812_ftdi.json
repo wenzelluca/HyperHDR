@@ -32,6 +32,9 @@
 				"sub_min_cool_adjust",
 				"sub_min_warm_adjust",
 				"sub_min_custom_adjust",
+				"wled_auto",
+				"wled_auto_max",
+				"wled_auto_accurate",
 				"white_off"				
 			],
 			"default": "white_off",
@@ -41,6 +44,9 @@
 					"edt_dev_enum_sub_min_cool_adjust",
 					"edt_dev_enum_sub_min_warm_adjust",
 					"edt_dev_enum_sub_min_custom_adjust",
+					"edt_dev_enum_wled_auto",
+					"edt_dev_enum_wled_auto_max",
+					"edt_dev_enum_wled_auto_accurate",
 					"edt_dev_enum_white_off"
 				]
 			},

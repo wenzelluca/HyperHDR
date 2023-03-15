@@ -27,7 +27,23 @@ namespace RGBW {
 		if (str == "sub_min_custom_adjust")
 		{
 			return WhiteAlgorithm::SUB_MIN_CUSTOM_ADJUST;
-		}	
+		}
+
+		if (str == "wled_auto")
+		{
+			return WhiteAlgorithm::WLED_AUTO;
+		}
+
+		if (str == "wled_auto_max")
+		{
+			return WhiteAlgorithm::WLED_AUTO_MAX;
+		}
+		
+		if (str == "wled_auto_accurate")
+		{
+			return WhiteAlgorithm::WLED_AUTO_ACCURATE;
+		}
+		
 		if (str.isEmpty() || str == "white_off")
 		{
 			return WhiteAlgorithm::WHITE_OFF;
@@ -75,9 +91,36 @@ namespace RGBW {
 			output->white = 0;
 			break;
 		}
+
+		case WhiteAlgorithm::WLED_AUTO_MAX: 
+		{
+			output->red = input.red;
+			output->green = input.green;
+			output->blue = input.blue;
+			output->white = input.red > input.green ? (input.red > input.blue ? input.red : input.blue) : (input.green > input.blue ? input.green : input.blue);
+			break;
+		}
+		
+		case WhiteAlgorithm::WLED_AUTO_ACCURATE:
+		{
+			output->white = input.red < input.green ? (input.red < input.blue ? input.red : input.blue) : (input.green < input.blue ? input.green : input.blue);
+			output->red = input.red - output->white;
+			output->green = input.green - output->white;
+			output->blue = input.blue - output->white;
+			break;
+		}
+
+		case WhiteAlgorithm::WLED_AUTO:
+		{
+
+			output->red = input.red;
+			output->green = input.green;
+			output->blue = input.blue;
+			output->white = input.red < input.green ? (input.red < input.blue ? input.red : input.blue) : (input.green < input.blue ? input.green : input.blue);
+			break;
+		}
 		default:
 			break;
 		}
 	}
-
 };
