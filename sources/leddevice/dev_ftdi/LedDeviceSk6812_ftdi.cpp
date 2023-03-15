@@ -24,6 +24,8 @@ bool LedDeviceSk6812_ftdi::init(const QJsonObject &deviceConfig)
 	// Initialise sub-class
 	if (ProviderFtdi::init(deviceConfig))
 	{
+		_brightnessControlMaxLevel = deviceConfig["brightnessControlMaxLevel"].toInt(255);
+
 		QString whiteAlgorithm = deviceConfig["whiteAlgorithm"].toString("white_off");
 
 		_whiteAlgorithm = RGBW::stringToWhiteAlgorithm(whiteAlgorithm);
@@ -48,6 +50,11 @@ bool LedDeviceSk6812_ftdi::init(const QJsonObject &deviceConfig)
 	return isInitOK;
 }
 
+
+inline __attribute__((always_inline)) uint8_t LedDeviceSk6812_ftdi::scale(uint8_t i, uint8_t scale) {
+	return (((uint16_t)i) * (1+(uint16_t)(scale))) >> 8;
+}
+
 int LedDeviceSk6812_ftdi::write(const std::vector<ColorRgb> &ledValues)
 {
 	unsigned spi_ptr = 0;
@@ -63,16 +70,20 @@ int LedDeviceSk6812_ftdi::write(const std::vector<ColorRgb> &ledValues)
 		_ledBuffer.resize(_ledRGBWCount * SPI_BYTES_PER_COLOUR + SPI_FRAME_END_LATCH_BYTES, 0x00);
 	}
 	ColorRgbw temp_rgbw;
-
+	ColorRgb scaled_color;
 	for (const ColorRgb &color : ledValues)
 	{
+		scaled_color.red = scale(color.red, _brightnessControlMaxLevel);
+		scaled_color.green = scale(color.green, _brightnessControlMaxLevel);
+		scaled_color.blue = scale(color.blue, _brightnessControlMaxLevel);
+
 		if (_whiteAlgorithm == RGBW::WhiteAlgorithm::SUB_MIN_CUSTOM_ADJUST)
 		{
-			RGBW::Rgb_to_RgbwAdjust(color, &temp_rgbw, _calibarion_config);
+			RGBW::Rgb_to_RgbwAdjust(scaled_color, &temp_rgbw, _calibarion_config);
 		}
 		else
 		{
-			RGBW::Rgb_to_Rgbw(color, &temp_rgbw, _whiteAlgorithm);
+			RGBW::Rgb_to_Rgbw(scaled_color, &temp_rgbw, _whiteAlgorithm);
 		}
 
 		uint32_t colorBits =

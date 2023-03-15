@@ -24,6 +24,13 @@
 			"default": false,
 			"propertyOrder": 3
 		},
+		"brightnessControlMaxLevel": {
+			"type": "integer",
+			"title": "edt_conf_color_brightness_title",
+			"default": 255,
+			"minimum": 1,
+			"maximum": 255
+		},
 		"whiteAlgorithm": {
 			"type": "string",
 			"title": "edt_dev_spec_whiteLedAlgor_title",
