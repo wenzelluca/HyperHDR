@@ -125,34 +125,18 @@ int ProviderFtdi::open()
 
 	double reference_clock = 60e6;
 	int divisor = (reference_clock / 2 / _baudRate_Hz) - 1;
-
-	if ((rc = writeByte(DIS_DIV_5)) != 1)
+	uint8_t buf[10] = {0};
+	unsigned int icmd = 0;
+	buf[icmd++] = DIS_DIV_5;
+	buf[icmd++] = TCK_DIVISOR;
+	buf[icmd++] = divisor;
+	buf[icmd++] = divisor >> 8;
+	buf[icmd++] = SET_BITS_LOW;		  // opcode: set low bits (ADBUS[0-7])
+	buf[icmd++] = Pin::CS & ~Pin::L0; // argument: inital pin states
+	buf[icmd++] = pinDirection;
+	if ((rc = ftdi_write_data(_ftdic, buf, icmd)) != icmd)
 	{
-		return rc;
-	}
-	if ((rc = writeByte(TCK_DIVISOR)) != 1)
-	{
-		return rc;
-	}
-	if ((rc = writeByte(divisor)) != 1)
-	{
-		return rc;
-	}
-	if ((rc = writeByte(divisor >> 8)) != 1)
-	{
-		return rc;
-	}
-	if ((rc = writeByte(SET_BITS_LOW)) != 1) // opcode: set low bits (ADBUS[0-7])
-	{
-		return rc;
-	}
-
-	if ((rc = writeByte(Pin::CS & ~Pin::L0)) != 1) // argument: inital pin states
-	{
-		return rc;
-	}
-	if ((rc = writeByte(pinDirection)) != 1) // argument: pin direction
-	{
+		setInError(ftdi_get_error_string(_ftdic));
 		return rc;
 	}
 
@@ -181,18 +165,9 @@ void ProviderFtdi::setInError(const QString &errorMsg)
 	LedDevice::setInError(errorMsg);
 }
 
-int ProviderFtdi::writeByte(uint8_t data)
-{
-	int rc = ftdi_write_data(_ftdic, &data, 1);
-	if (rc != 1)
-	{
-		setInError(ftdi_get_error_string(_ftdic));
-	}
-	return rc;
-}
 int ProviderFtdi::writeBytes(const qint64 size, const uint8_t *data)
 {
-	uint8_t buf[100] = {0};
+	uint8_t buf[10] = {0};
 	unsigned int icmd = 0;
 	int rc = 0;
 

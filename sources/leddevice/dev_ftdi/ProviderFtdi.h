@@ -73,8 +73,6 @@ protected slots:
 	void setInError(const QString& errorMsg) override;
 
 private:
-	int writeByte(uint8_t data);
-
 	int openDevice();
 };
 
