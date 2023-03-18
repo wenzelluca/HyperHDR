@@ -29,14 +29,6 @@ bool LedDeviceSk6812_ftdi::init(const QJsonObject &deviceConfig)
 		QString whiteAlgorithm = deviceConfig["whiteAlgorithm"].toString("white_off");
 
 		_whiteAlgorithm = RGBW::stringToWhiteAlgorithm(whiteAlgorithm);
-		uint8_t white_channel_red = qMin(deviceConfig["white_channel_red"].toInt(255), 255);
-		uint8_t white_channel_green = qMin(deviceConfig["white_channel_green"].toInt(255), 255);
-		uint8_t white_channel_blue = qMin(deviceConfig["white_channel_blue"].toInt(255), 255);
-
-		_calibarion_config = {
-			white_channel_red / 255.0,
-			white_channel_green / 255.0,
-			white_channel_blue / 255.0};
 
 		Debug(_log, "whiteAlgorithm : %s", QSTRING_CSTR(whiteAlgorithm));
 
@@ -77,14 +69,7 @@ int LedDeviceSk6812_ftdi::write(const std::vector<ColorRgb> &ledValues)
 		scaled_color.green = scale(color.green, _brightnessControlMaxLevel);
 		scaled_color.blue = scale(color.blue, _brightnessControlMaxLevel);
 
-		if (_whiteAlgorithm == RGBW::WhiteAlgorithm::SUB_MIN_CUSTOM_ADJUST)
-		{
-			RGBW::Rgb_to_RgbwAdjust(scaled_color, &temp_rgbw, _calibarion_config);
-		}
-		else
-		{
-			RGBW::Rgb_to_Rgbw(scaled_color, &temp_rgbw, _whiteAlgorithm);
-		}
+        RGBW::Rgb_to_Rgbw(scaled_color, &temp_rgbw, _whiteAlgorithm);
 
 		uint32_t colorBits =
 			((uint32_t)temp_rgbw.red << 24) +

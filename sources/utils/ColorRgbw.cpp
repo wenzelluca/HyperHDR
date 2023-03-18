@@ -8,6 +8,8 @@ const ColorRgbw ColorRgbw::BLUE   = {   0,   0, 255,   0 };
 const ColorRgbw ColorRgbw::YELLOW = { 255, 255,   0,   0 };
 const ColorRgbw ColorRgbw::WHITE  = {   0,   0,   0, 255 };
 
+#define ROUND_DIVIDE(number, denom) (((number) + (denom) / 2) / (denom))
+
 namespace RGBW {
 
 	WhiteAlgorithm stringToWhiteAlgorithm(const QString& str)
@@ -24,11 +26,14 @@ namespace RGBW {
 		{
 			return WhiteAlgorithm::SUB_MIN_COOL_ADJUST;
 		}
-		if (str == "sub_min_custom_adjust")
+		if (str == "hyperserial_cold_white")
 		{
-			return WhiteAlgorithm::SUB_MIN_CUSTOM_ADJUST;
+			return WhiteAlgorithm::HYPERSERIAL_COLD_WHITE;
 		}
-
+        if (str == "hyperserial_neutral_white")
+        {
+            return WhiteAlgorithm::HYPERSERIAL_NEUTRAL_WHITE;
+        }
 		if (str == "wled_auto")
 		{
 			return WhiteAlgorithm::WLED_AUTO;
@@ -50,13 +55,6 @@ namespace RGBW {
 		}
 		return WhiteAlgorithm::INVALID;
 	}
-	void Rgb_to_RgbwAdjust(ColorRgb input, ColorRgbw* output, CalibrationConfig config)
-	{
-		output->white = static_cast<uint8_t>(qMin(input.red * config.F1, qMin(input.green * config.F2, input.blue * config.F3)));
-		output->red = input.red - static_cast<uint8_t>(output->white / config.F1);
-		output->green = input.green - static_cast<uint8_t>(output->white / config.F2);
-		output->blue = input.blue - static_cast<uint8_t>(output->white / config.F3);
-	}
 
 	void Rgb_to_Rgbw(ColorRgb input, ColorRgbw* output, WhiteAlgorithm algorithm)
 	{
@@ -73,13 +71,31 @@ namespace RGBW {
 
 		case WhiteAlgorithm::SUB_MIN_WARM_ADJUST:
 		{
-			Rgb_to_RgbwAdjust(input, output, WARM_WHITE);
+			// http://forum.garagecube.com/viewtopic.php?t=10178
+			// warm white
+			const double F1(0.274);
+			const double F2(0.454);
+			const double F3(2.333);
+
+			output->white = static_cast<uint8_t>(qMin(input.red * F1, qMin(input.green * F2, input.blue * F3)));
+			output->red = input.red - static_cast<uint8_t>(output->white / F1);
+			output->green = input.green - static_cast<uint8_t>(output->white / F2);
+			output->blue = input.blue - static_cast<uint8_t>(output->white / F3);
 			break;
 		}
 
 		case WhiteAlgorithm::SUB_MIN_COOL_ADJUST:
 		{
-			Rgb_to_RgbwAdjust(input, output, COLD_WHITE);			
+			// http://forum.garagecube.com/viewtopic.php?t=10178
+			// cold white
+			const double F1(0.299);
+			const double F2(0.587);
+			const double F3(0.114);
+
+			output->white = static_cast<uint8_t>(qMin(input.red * F1, qMin(input.green * F2, input.blue * F3)));
+			output->red = input.red - static_cast<uint8_t>(output->white / F1);
+			output->green = input.green - static_cast<uint8_t>(output->white / F2);
+			output->blue = input.blue - static_cast<uint8_t>(output->white / F3);
 			break;
 		}
 
@@ -119,6 +135,35 @@ namespace RGBW {
 			output->white = input.red < input.green ? (input.red < input.blue ? input.red : input.blue) : (input.green < input.blue ? input.green : input.blue);
 			break;
 		}
+        case WhiteAlgorithm::HYPERSERIAL_NEUTRAL_WHITE:
+        case WhiteAlgorithm::HYPERSERIAL_COLD_WHITE:
+        {
+            //cold white config
+            uint8_t gain = 0xFF;
+            uint8_t red = 0xA0;
+            uint8_t green = 0xA0;
+            uint8_t blue = 0xA0;
+
+            if (algorithm == WhiteAlgorithm::HYPERSERIAL_NEUTRAL_WHITE) {
+                gain = 0xFF;
+                red = 0xB0;
+                green = 0xB0;
+                blue = 0x70;
+            }
+
+            uint8_t _r = qMin((uint32_t)(ROUND_DIVIDE(red * input.red,  0xFF)), (uint32_t)0xFF);
+            uint8_t _g = qMin((uint32_t)(ROUND_DIVIDE(green * input.green,  0xFF)), (uint32_t)0xFF);
+            uint8_t _b = qMin((uint32_t)(ROUND_DIVIDE(blue * input.blue,  0xFF)), (uint32_t)0xFF);
+
+            output->white = qMin(_r, qMin(_g, _b));
+            output->red = input.red - _r;
+            output->green = input.green - _g;
+            output->blue = input.blue - _b;
+
+            uint8_t _w = qMin((uint32_t)(ROUND_DIVIDE(gain * output->white,  0xFF)), (uint32_t)0xFF);
+            output->white = _w;
+            break;
+        }
 		default:
 			break;
 		}

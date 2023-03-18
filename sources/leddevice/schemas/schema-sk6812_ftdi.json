@@ -17,19 +17,13 @@
 			"default": 3200000,
 			"propertyOrder": 2
 		},
-		"invert": {
-			"type": "boolean",
-			"format": "checkbox",
-			"title": "edt_dev_spec_invert_title",
-			"default": false,
-			"propertyOrder": 3
-		},
 		"brightnessControlMaxLevel": {
 			"type": "integer",
 			"title": "edt_conf_color_brightness_title",
 			"default": 255,
 			"minimum": 1,
-			"maximum": 255
+			"maximum": 255,
+			"propertyOrder": 3
 		},
 		"whiteAlgorithm": {
 			"type": "string",
@@ -38,7 +32,8 @@
 				"subtract_minimum",
 				"sub_min_cool_adjust",
 				"sub_min_warm_adjust",
-				"sub_min_custom_adjust",
+				"hyperserial_cold_white",
+				"hyperserial_neutral_white",
 				"wled_auto",
 				"wled_auto_max",
 				"wled_auto_accurate",
@@ -50,7 +45,8 @@
 					"edt_dev_enum_subtract_minimum",
 					"edt_dev_enum_sub_min_cool_adjust",
 					"edt_dev_enum_sub_min_warm_adjust",
-					"edt_dev_enum_sub_min_custom_adjust",
+					"edt_dev_enum_hyperserial_cold_white",
+					"edt_dev_enum_hyperserial_neutral_white",
 					"edt_dev_enum_wled_auto",
 					"edt_dev_enum_wled_auto_max",
 					"edt_dev_enum_wled_auto_accurate",
@@ -58,54 +54,6 @@
 				]
 			},
 			"propertyOrder": 5
-		},
-		"white_channel_red": {
-			"type": "integer",
-			"title": "edt_rgbw_calibration_red",
-			"format": "stepper",
-			"required": true,
-			"default": 160,
-			"step": 1,
-			"minimum": 0,
-			"maximum": 255,
-			"options": {
-				"dependencies": {
-					"whiteAlgorithm": "sub_min_custom_adjust"
-				}
-			},
-			"propertyOrder": 7
-		},
-		"white_channel_green": {
-			"type": "integer",
-			"title": "edt_rgbw_calibration_green",
-			"format": "stepper",
-			"required": true,
-			"default": 160,
-			"step": 1,
-			"minimum": 0,
-			"maximum": 255,
-			"options": {
-				"dependencies": {
-					"whiteAlgorithm": "sub_min_custom_adjust"
-				}
-			},
-			"propertyOrder": 8
-		},
-		"white_channel_blue": {
-			"type": "integer",
-			"title": "edt_rgbw_calibration_blue",
-			"format": "stepper",
-			"required": true,
-			"default": 160,
-			"step": 1,
-			"minimum": 0,
-			"maximum": 255,
-			"options": {
-				"dependencies": {
-					"whiteAlgorithm": "sub_min_custom_adjust"
-				}
-			},
-			"propertyOrder": 9
 		}
 	},
 	"additionalProperties": true

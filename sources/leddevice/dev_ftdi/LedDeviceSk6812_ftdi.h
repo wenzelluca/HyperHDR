@@ -46,8 +46,7 @@ private:
 	inline __attribute__((always_inline)) uint8_t scale(uint8_t i, uint8_t scale);
 
 	RGBW::WhiteAlgorithm _whiteAlgorithm;
-	RGBW::CalibrationConfig _calibarion_config;
-				
+
 	const int SPI_BYTES_PER_COLOUR;
 	uint8_t bitpair_to_byte[4];
 
