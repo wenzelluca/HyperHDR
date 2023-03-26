@@ -38,7 +38,7 @@ SET ( DEFAULT_BONJOUR                     ON  )
 SET ( DEFAULT_MQTT                        ON  )
 SET ( DEFAULT_STATIC_QT_PLUGINS           OFF )
 SET ( DEFAULT_PRECOMPILED_HEADERS         ON  )
-SET ( DEFAULT_ENABLE_FTDIDEV           	  OFF )
+SET ( DEFAULT_ENABLE_FTDIDEV           	  ON )
 
 # Configure CCache if available
 find_program(CCACHE_FOUND ccache)
