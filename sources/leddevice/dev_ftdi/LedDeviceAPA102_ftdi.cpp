@@ -16,13 +16,13 @@ bool LedDeviceAPA102_ftdi::init(const QJsonObject &deviceConfig)
 {
 	bool isInitOK = false;
 
-	_brightnessControlMaxLevel = deviceConfig["brightnessControlMaxLevel"].toInt(LED_BRIGHTNESS_FULL);
-	Info(_log, "[%s] Setting maximum brightness to [%d] = %d%%", QSTRING_CSTR(_activeDeviceType), _brightnessControlMaxLevel, _brightnessControlMaxLevel * 100 / LED_BRIGHTNESS_FULL);
-
 	// Initialise sub-class
 	if (ProviderFtdi::init(deviceConfig))
 	{
-		CreateHeader();
+        _brightnessControlMaxLevel = deviceConfig["brightnessControlMaxLevel"].toInt(LED_BRIGHTNESS_FULL);
+        Info(_log, "[%s] Setting maximum brightness to [%d] = %d%%", QSTRING_CSTR(_activeDeviceType), _brightnessControlMaxLevel, _brightnessControlMaxLevel * 100 / LED_BRIGHTNESS_FULL);
+
+        CreateHeader();
 		isInitOK = true;
 	}
 	return isInitOK;
@@ -40,14 +40,6 @@ void LedDeviceAPA102_ftdi::CreateHeader()
 
 int LedDeviceAPA102_ftdi::write(const std::vector<ColorRgb> &ledValues)
 {
-	if (_ledCount != ledValues.size())
-	{
-		Warning(_log, "APA102 led's number has changed (old: %d, new: %d). Rebuilding buffer.", _ledCount, ledValues.size());
-		_ledCount = ledValues.size();
-
-		CreateHeader();
-	}
-
 	for (signed iLed = 0; iLed < static_cast<int>(_ledCount); ++iLed)
 	{
 		const ColorRgb &rgb = ledValues[iLed];
