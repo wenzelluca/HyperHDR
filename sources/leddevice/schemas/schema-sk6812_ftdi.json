@@ -6,7 +6,8 @@
 			"type": "string",
 			"title": "edt_dev_spec_outputPath_title",
 			"required": true,
-			"propertyOrder": 1
+			"propertyOrder": 1,
+			"default": "auto"
 		},
 		"rate": {
 			"type": "integer",

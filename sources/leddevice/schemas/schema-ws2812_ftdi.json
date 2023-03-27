@@ -5,7 +5,8 @@
 		"output": {
 			"type": "string",
 			"title": "edt_dev_spec_outputPath_title",
-			"required" : true
+			"required" : true,
+			"default": "auto"
 		},
 		"rate": {
 			"type": "integer",
