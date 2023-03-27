@@ -212,19 +212,22 @@ QJsonObject ProviderFtdi::discover(const QJsonObject & /*params*/)
 
 	if (ftdi_usb_find_all(ftdic, &devlist, ANY_FTDI_VENDOR, ANY_FTDI_PRODUCT) > 0)
 	{
+        QMap<QString, uint8_t> deviceIndexes;
 		struct ftdi_device_list *curdev = devlist;
 		while (curdev)
 		{
-			char manufacturer[128];
-			ftdi_usb_get_strings(ftdic, curdev->dev, manufacturer, 128, NULL, 0, NULL, 0);
+			char manufacturer[128], description[128];
+			ftdi_usb_get_strings(ftdic, curdev->dev, manufacturer, 128, description, 128, NULL, 0);
 
-            uint8_t bus_number = libusb_get_bus_number(curdev->dev);
-            uint8_t device_address = libusb_get_device_address(curdev->dev);
+            libusb_device_descriptor desc;
+            libusb_get_device_descriptor(curdev->dev, &desc);
 
-            QString value = QString("d:%1/%2")
-                    .arg(bus_number, 3, 10, QChar{'0'})
-                    .arg(device_address, 3, 10, QChar{'0'});
+            QString vendorAndProduct = QString("i:0x%1:0x%2")
+                    .arg(desc.idVendor, 4, 16, QChar{'0'})
+                    .arg(desc.idProduct, 4, 16, QChar{'0'});
+            uint8_t deviceIndex = deviceIndexes.value(vendorAndProduct, 0);
 
+            QString value = QString("%1:%2").arg(vendorAndProduct).arg(deviceIndex);
 
             QString displayLabel = QString("%1 (%2)")
                     .arg(value)
@@ -236,6 +239,8 @@ QJsonObject ProviderFtdi::discover(const QJsonObject & /*params*/)
             });
 
 			curdev = curdev->next;
+
+            deviceIndexes.insert(vendorAndProduct, deviceIndex + 1);
 		}
 	}
 
