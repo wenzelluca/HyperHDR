@@ -133,9 +133,8 @@ endif()
 
 
 if( ENABLE_FTDIDEV )
-	FIND_PACKAGE(PkgConfig REQUIRED)
-	pkg_check_modules(LIB_FTDI REQUIRED libftdi1)
-	add_library(libftdi1 SHARED IMPORTED)
-	target_include_directories(leddevice PUBLIC ${LIB_FTDI_INCLUDE_DIRS})
-	target_link_libraries(leddevice ${LIB_FTDI_LINK_LIBRARIES})
+	find_package(PkgConfig REQUIRED)
+	pkg_check_modules(LIB_FTDI REQUIRED IMPORTED_TARGET libftdi1 )
+	target_include_directories(leddevice PRIVATE PkgConfig::LIB_FTDI)
+	target_link_libraries(leddevice PkgConfig::LIB_FTDI)
 endif()
