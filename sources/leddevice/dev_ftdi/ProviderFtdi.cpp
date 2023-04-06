@@ -16,12 +16,11 @@ namespace Pin
 		SK = 0x01, // ADBUS0, SPI data clock
 		DO = 0x02, // ADBUS1, SPI data out
 		CS = 0x08, // ADBUS3, SPI chip select, active low
-		L0 = 0x10, // ADBUS4, SPI chip select, active high
 	};
 }
 
 // Use these pins as outputs
-const unsigned char pinDirection = Pin::SK | Pin::DO | Pin::CS | Pin::L0;
+const unsigned char pinDirection = Pin::SK | Pin::DO | Pin::CS;
 
 const QString ProviderFtdi::AUTO_SETTING = QString("auto");
 
@@ -134,7 +133,7 @@ int ProviderFtdi::open()
 	buf[icmd++] = divisor >> 8;
 
 	buf[icmd++] = SET_BITS_LOW;
-	buf[icmd++] = ~Pin::CS & Pin::CS; // pull CS down, and ^CS high
+	buf[icmd++] = ~Pin::CS; // pull CS down
 	buf[icmd++] = pinDirection;
 	if ((rc = ftdi_write_data(_ftdic, buf, icmd)) != icmd)
 	{
