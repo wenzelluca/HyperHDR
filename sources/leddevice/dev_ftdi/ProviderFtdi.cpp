@@ -135,8 +135,9 @@ int ProviderFtdi::open()
 	buf[icmd++] = TCK_DIVISOR;
 	buf[icmd++] = divisor;
 	buf[icmd++] = divisor >> 8;
-	buf[icmd++] = SET_BITS_LOW;		  // opcode: set low bits (ADBUS[0-7])
-	buf[icmd++] = Pin::CS & ~Pin::L0; // argument: inital pin states
+
+	buf[icmd++] = SET_BITS_LOW;
+	buf[icmd++] = ~Pin::CS & Pin::CS; // pull CS down, and ^CS high
 	buf[icmd++] = pinDirection;
 	if ((rc = ftdi_write_data(_ftdic, buf, icmd)) != icmd)
 	{
@@ -179,9 +180,6 @@ int ProviderFtdi::writeBytes(const qint64 size, const uint8_t *data)
 	int rc = 0;
 
 	int count_arg = size - 1;
-	buf[icmd++] = SET_BITS_LOW;
-	buf[icmd++] = Pin::L0 & ~Pin::CS;
-	buf[icmd++] = pinDirection;
 	buf[icmd++] = MPSSE_DO_WRITE | MPSSE_WRITE_NEG;
 	buf[icmd++] = count_arg;
 	buf[icmd++] = count_arg >> 8;
@@ -192,15 +190,6 @@ int ProviderFtdi::writeBytes(const qint64 size, const uint8_t *data)
 		return rc;
 	}
 	if ((rc = ftdi_write_data(_ftdic, data, size)) != size)
-	{
-		setInError(ftdi_get_error_string(_ftdic));
-		return rc;
-	}
-	icmd = 0;
-	buf[icmd++] = SET_BITS_LOW;
-	buf[icmd++] = Pin::CS & ~Pin::L0;
-	buf[icmd++] = pinDirection;
-	if ((rc = ftdi_write_data(_ftdic, buf, icmd)) != icmd)
 	{
 		setInError(ftdi_get_error_string(_ftdic));
 		return rc;
