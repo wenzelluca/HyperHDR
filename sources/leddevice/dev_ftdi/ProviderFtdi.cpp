@@ -147,14 +147,11 @@ int ProviderFtdi::open()
 
 int ProviderFtdi::close()
 {
-	if (_ftdic != NULL)
-	{
-		Debug(_log, "Closing FTDI device");
+	
+	Debug(_log, "Closing FTDI device");
+	ftdi_usb_close(_ftdic);
+	_ftdic = NULL;
 
-		ftdi_set_bitmode(_ftdic, 0x00, BITMODE_RESET);
-		ftdi_usb_close(_ftdic);
-		_ftdic = NULL;
-	}
 	return LedDevice::close();
 }
 
