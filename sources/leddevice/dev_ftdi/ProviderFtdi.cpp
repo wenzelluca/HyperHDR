@@ -219,31 +219,39 @@ QJsonObject ProviderFtdi::discover(const QJsonObject & /*params*/)
 		struct ftdi_device_list *curdev = devlist;
 		while (curdev)
 		{
-			char manufacturer[128], description[128];
-			ftdi_usb_get_strings(ftdic, curdev->dev, manufacturer, 128, description, 128, NULL, 0);
+			char manufacturer[128] = {0}, serial_string[128] = {0};
+			ftdi_usb_get_strings(ftdic, curdev->dev, manufacturer, 128, NULL, 0, serial_string, 128);
 
             libusb_device_descriptor desc;
             libusb_get_device_descriptor(curdev->dev, &desc);
 
-            QString vendorAndProduct = QString("i:0x%1:0x%2")
+            QString vendorAndProduct = QString("0x%1:0x%2")
                     .arg(desc.idVendor, 4, 16, QChar{'0'})
                     .arg(desc.idProduct, 4, 16, QChar{'0'});
-            uint8_t deviceIndex = deviceIndexes.value(vendorAndProduct, 0);
-
-            QString value = QString("%1:%2").arg(vendorAndProduct).arg(deviceIndex);
+            
+			QString serialNumber {serial_string};
+			QString ftdiOpenString;
+			if(!serialNumber.isEmpty())
+			{
+				ftdiOpenString = QString("s:%1:%2").arg(vendorAndProduct).arg(serialNumber);
+			}
+			else
+			{
+				uint8_t deviceIndex = deviceIndexes.value(vendorAndProduct, 0);
+				ftdiOpenString = QString("i:%1:%2").arg(vendorAndProduct).arg(deviceIndex);
+				deviceIndexes.insert(vendorAndProduct, deviceIndex + 1);
+			}
 
             QString displayLabel = QString("%1 (%2)")
-                    .arg(value)
+                    .arg(ftdiOpenString)
                     .arg(manufacturer);
 
 			deviceList.push_back(QJsonObject{
-				{"value", value},
+				{"value", ftdiOpenString},
 				{"name", displayLabel}
             });
 
-			curdev = curdev->next;
-
-            deviceIndexes.insert(vendorAndProduct, deviceIndex + 1);
+			curdev = curdev->next;            
 		}
 	}
 
