@@ -24,8 +24,6 @@ const unsigned char pinDirection = Pin::SK | Pin::DO | Pin::CS;
 
 const QString ProviderFtdi::AUTO_SETTING = QString("auto");
 
-constexpr std::chrono::milliseconds CLOSE_DELAY_TIME{ 15 };
-
 ProviderFtdi::ProviderFtdi(const QJsonObject &deviceConfig)
 	: LedDevice(deviceConfig),
 	  _ftdic(nullptr),
