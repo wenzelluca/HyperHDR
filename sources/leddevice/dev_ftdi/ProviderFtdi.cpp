@@ -18,7 +18,6 @@ namespace Pin
 		SK = 0x01, // ADBUS0, SPI data clock
 		DO = 0x02, // ADBUS1, SPI data out
 		CS = 0x08, // ADBUS3, SPI chip select, active low
-		L0 = 0x10, // ADBUS4, SPI chip select, active high
 	};
 }
 
