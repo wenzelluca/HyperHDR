@@ -5,6 +5,8 @@
 #include <ftdi.h>
 #include <libusb.h>
 
+#include <QEventLoop>
+
 #define ANY_FTDI_VENDOR 0x0
 #define ANY_FTDI_PRODUCT 0x0
 
@@ -146,6 +148,12 @@ int ProviderFtdi::close()
 {
 	Debug(_log, "Closing FTDI device");
 	if (_ftdic != nullptr) {
+        QEventLoop loop;
+//      Delay to give time to push color black from writeBlack() into the led,
+//      otherwise frame transmission will be terminated half way through
+        QTimer::singleShot(30, &loop, &QEventLoop::quit);
+        loop.exec();
+
 		ftdi_set_bitmode(_ftdic, 0x00, BITMODE_RESET);
 		ftdi_usb_close(_ftdic);
 		ftdi_free(_ftdic);
