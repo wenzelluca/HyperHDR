@@ -21,6 +21,8 @@ namespace Pin
 	};
 }
 
+#define FTDI_CHECK_RESULT(statement) if (statement) {setInError(ftdi_get_error_string(_ftdic)); return rc;}
+
 const unsigned char pinInitialState = Pin::CS;
 // Use these pins as outputs
 const unsigned char pinDirection = Pin::SK | Pin::DO | Pin::CS;
@@ -53,6 +55,7 @@ bool ProviderFtdi::init(const QJsonObject &deviceConfig)
 
 int ProviderFtdi::openDevice()
 {
+	int rc = 0;
 	_ftdic = ftdi_new();
 
 	bool autoDiscovery = (QString::compare(_deviceName, ProviderFtdi::AUTO_SETTING, Qt::CaseInsensitive) == 0);
@@ -60,13 +63,10 @@ int ProviderFtdi::openDevice()
 	if (autoDiscovery)
 	{
 		struct ftdi_device_list *devlist;
-		int devicesDetected = 0;
-		if ((devicesDetected = ftdi_usb_find_all(_ftdic, &devlist, ANY_FTDI_VENDOR, ANY_FTDI_PRODUCT)) < 0)
-		{
-			setInError(ftdi_get_error_string(_ftdic));
-			return -1;
-		}
-		if (devicesDetected == 0)
+
+		FTDI_CHECK_RESULT((rc = ftdi_usb_find_all(_ftdic, &devlist, ANY_FTDI_VENDOR, ANY_FTDI_PRODUCT)) < 0);
+		
+		if (rc == 0)
 		{
 			setInError("No ftdi devices detected");
 			return 0;
@@ -84,11 +84,7 @@ int ProviderFtdi::openDevice()
 	}
 	else
 	{
-		if (ftdi_usb_open_string(_ftdic, QSTRING_CSTR(_deviceName)) < 0)
-		{
-			setInError(ftdi_get_error_string(_ftdic));
-			return -1;
-		}
+		FTDI_CHECK_RESULT((rc = ftdi_usb_open_string(_ftdic, QSTRING_CSTR(_deviceName))) < 0);
 		return 1;
 	}
 }
@@ -102,44 +98,25 @@ int ProviderFtdi::open()
 	}
 
 	/* doing this disable resets things if they were in a bad state */
-	if ((rc = ftdi_disable_bitbang(_ftdic)) < 0)
-	{
-		setInError(ftdi_get_error_string(_ftdic));
-		return rc;
-	}
-	if ((rc = ftdi_setflowctrl(_ftdic, SIO_DISABLE_FLOW_CTRL)) < 0)
-	{
-		setInError(ftdi_get_error_string(_ftdic));
-		return rc;
-	}
-	if ((rc = ftdi_set_bitmode(_ftdic, 0x00, BITMODE_RESET)) < 0)
-	{
-		setInError(ftdi_get_error_string(_ftdic));
-		return rc;
-	}
-
-	if ((rc = ftdi_set_bitmode(_ftdic, 0xff, BITMODE_MPSSE)) < 0)
-	{
-		setInError(ftdi_get_error_string(_ftdic));
-		return rc;
-	}
+	FTDI_CHECK_RESULT((rc = ftdi_disable_bitbang(_ftdic)) < 0);
+	FTDI_CHECK_RESULT((rc = ftdi_setflowctrl(_ftdic, SIO_DISABLE_FLOW_CTRL)) < 0);
+	FTDI_CHECK_RESULT((rc = ftdi_set_bitmode(_ftdic, 0x00, BITMODE_RESET)) < 0);
+	FTDI_CHECK_RESULT((rc = ftdi_set_bitmode(_ftdic, 0xff, BITMODE_MPSSE)) < 0);
+	
 
 	double reference_clock = 60e6;
 	int divisor = (reference_clock / 2 / _baudRate_Hz) - 1;
-	uint8_t buf[10] = {0};
-	unsigned int icmd = 0;
-	buf[icmd++] = DIS_DIV_5;
-	buf[icmd++] = TCK_DIVISOR;
-	buf[icmd++] = divisor;
-	buf[icmd++] = divisor >> 8;
-	buf[icmd++] = SET_BITS_LOW;		  // opcode: set low bits (ADBUS[0-7])
-	buf[icmd++] = pinInitialState;    // argument: inital pin states
-	buf[icmd++] = pinDirection;
-	if ((rc = ftdi_write_data(_ftdic, buf, icmd)) != icmd)
-	{
-		setInError(ftdi_get_error_string(_ftdic));
-		return rc;
-	}
+    std::vector<uint8_t> buf = {
+            DIS_DIV_5,
+            TCK_DIVISOR,
+            static_cast<unsigned char>(divisor),
+            static_cast<unsigned char>(divisor >> 8),
+            SET_BITS_LOW,		  // opcode: set low bits (ADBUS[0-7]
+            pinInitialState,    // argument: inital pin state
+            pinDirection
+    };
+
+	FTDI_CHECK_RESULT((rc = ftdi_write_data(_ftdic, buf.data(), buf.size())) != buf.size());
 
 	_isDeviceReady = true;
 	return rc;
@@ -172,38 +149,26 @@ void ProviderFtdi::setInError(const QString &errorMsg)
 
 int ProviderFtdi::writeBytes(const qint64 size, const uint8_t *data)
 {
-	uint8_t buf[10] = {0};
-	unsigned int icmd = 0;
-	int rc = 0;
+    int rc = 0;
+    int count_arg = size - 1;
+    std::vector<uint8_t> buf = {
+            SET_BITS_LOW,
+            pinInitialState & ~Pin::CS,
+            pinDirection,
+            MPSSE_DO_WRITE | MPSSE_WRITE_NEG,
+            static_cast<unsigned char>(count_arg),
+            static_cast<unsigned char>(count_arg >> 8),
+//            LED's data will be inserted here
+            SET_BITS_LOW,
+            pinInitialState | Pin::CS,
+            pinDirection
+    };
+    // insert before last SET_BITS_LOW command
+    // SET_BITS_LOW takes 2 arguments, so we're inserting data in -3 position from the end
+    buf.insert(buf.end() - 3, &data[0], &data[size]);
 
-	int count_arg = size - 1;
-	buf[icmd++] = SET_BITS_LOW;
-	buf[icmd++] = pinInitialState & ~Pin::CS;
-	buf[icmd++] = pinDirection;
-	buf[icmd++] = MPSSE_DO_WRITE | MPSSE_WRITE_NEG;
-	buf[icmd++] = count_arg;
-	buf[icmd++] = count_arg >> 8;
-
-	if ((rc = ftdi_write_data(_ftdic, buf, icmd)) != icmd)
-	{
-		setInError(ftdi_get_error_string(_ftdic));
-		return rc;
-	}
-	if ((rc = ftdi_write_data(_ftdic, data, size)) != size)
-	{
-		setInError(ftdi_get_error_string(_ftdic));
-		return rc;
-	}
-	icmd = 0;
-	buf[icmd++] = SET_BITS_LOW;
-	buf[icmd++] = pinInitialState | Pin::CS;
-	buf[icmd++] = pinDirection;
-	if ((rc = ftdi_write_data(_ftdic, buf, icmd)) != icmd)
-	{
-		setInError(ftdi_get_error_string(_ftdic));
-		return rc;
-	}
-	return rc;
+    FTDI_CHECK_RESULT((rc = (ftdi_write_data(_ftdic, buf.data(), buf.size())) != buf.size()));
+    return rc;
 }
 
 QJsonObject ProviderFtdi::discover(const QJsonObject & /*params*/)
