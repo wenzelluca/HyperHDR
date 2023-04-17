@@ -20,8 +20,6 @@ public:
 	///
 	ProviderFtdi(const QJsonObject& deviceConfig);
 
-	static const QString AUTO_SETTING;
-
 protected:
 	///
 	/// @brief Opens the output device.
@@ -64,16 +62,10 @@ protected:
 	QString _deviceName;
 
 protected slots:
-
-	///
-	/// @brief Set device in error state
-	///
-	/// @param errorMsg The error message to be logged
-	///
 	void setInError(const QString& errorMsg) override;
 
 private:
-	int openDevice();
+	bool openDevice();
 };
 
 #endif // PROVIDERFtdi_H

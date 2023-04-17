@@ -23,8 +23,8 @@ compile_commands.json
 sources/flatbufserver/hyperhdr_reply_generated.h
 sources/flatbufserver/hyperhdr_request_generated.h
 
-# lib-turbo
-dependencies/jpeg-windows
+# turbojpeg and ftdi windows libraries
+dependencies/windows
 
 # Network discovery library
 dependencies/bonjour

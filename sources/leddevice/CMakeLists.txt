@@ -44,7 +44,7 @@ if ( ENABLE_SPIDEV )
 	FILE ( GLOB Leddevice_SPI_SOURCES "${CURRENT_SOURCE_DIR}/dev_spi/*.h" "${CURRENT_SOURCE_DIR}/dev_spi/*.cpp")
 endif()
 
-if (ENABLE_FTDIDEV)
+if ( ENABLE_FTDIDEV )
 	FILE ( GLOB Leddevice_FTDI_SOURCES "${CURRENT_SOURCE_DIR}/dev_ftdi/*.h" "${CURRENT_SOURCE_DIR}/dev_ftdi/*.cpp")
 endif()
 
@@ -131,10 +131,7 @@ if(USE_PRECOMPILED_HEADERS AND COMMAND target_precompile_headers)
     target_precompile_headers(leddevice REUSE_FROM precompiled_hyperhdr_headers)
 endif()
 
-
-if( ENABLE_FTDIDEV )
-	find_package(PkgConfig REQUIRED)
-	pkg_check_modules(LIB_FTDI REQUIRED IMPORTED_TARGET libftdi1 )
-	target_include_directories(leddevice PRIVATE PkgConfig::LIB_FTDI)
-	target_link_libraries(leddevice PkgConfig::LIB_FTDI)
+if(ENABLE_FTDIDEV)
+	target_include_directories(leddevice PRIVATE ${LIB_FTDI_INCLUDE_DIRS} ${LIB_USB_INCLUDE_DIRS})
+	target_link_libraries(leddevice ${LIB_FTDI_LINK_LIBRARIES} ${LIB_USB_LINK_LIBRARIES})
 endif()

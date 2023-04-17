@@ -43,7 +43,7 @@ private:
 	///
 	int write(const std::vector<ColorRgb>& ledValues) override;
 
-	inline __attribute__((always_inline)) uint8_t scale(uint8_t i, uint8_t scale);
+	inline uint8_t scale(uint8_t i, uint8_t scale);
 
 	RGBW::WhiteAlgorithm _whiteAlgorithm;
 
