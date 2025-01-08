@@ -58,7 +58,7 @@ private:
 	const QString        WEBSERVER_DEFAULT_PATH = ":/www";
 	const QString        WEBSERVER_DEFAULT_CRT_PATH = ":/hyperhdrcrt.pem";
 	const QString        WEBSERVER_DEFAULT_KEY_PATH = ":/hyperhdrkey.pem";
-	quint16              WEBSERVER_DEFAULT_PORT = 8090;
+	quint16              WEBSERVER_DEFAULT_PORT = 8080;
 
 	BonjourServiceRegister* _serviceRegister = nullptr;
 	std::shared_ptr<FileServer> _staticFileServing = nullptr;
